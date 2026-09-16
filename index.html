@@ -13,7 +13,7 @@
         <div class="flex justify-between items-center mb-6 border-b pb-4">
             <h1 class="text-2xl font-bold text-gray-900">📄 KI Kündigungs-Assistent</h1>
             <button onclick="openSettings()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-xl text-sm font-semibold transition">
-                ⚙️ API & Modell Einstellungen
+                ⚙️ API-Key Einstellungen
             </button>
         </div>
         
@@ -93,26 +93,20 @@
         </div>
     </div>
 
-    <!-- Einstellungs-Modal für API Key und Modell -->
+    <!-- Einstellungs-Modal nur für den API Key -->
     <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4">
         <div class="bg-white p-6 md:p-8 rounded-2xl max-w-md w-full shadow-2xl">
-            <h3 class="text-xl font-bold mb-4">⚙️ Konfiguration</h3>
-            <p class="text-sm text-gray-600 mb-4">Deine Daten und dein Key werden absolut sicher und ausschließlich lokal in deinem Browser gespeichert (`localStorage`).</p>
+            <h3 class="text-xl font-bold mb-4">🔑 API-Key Konfiguration</h3>
+            <p class="text-sm text-gray-600 mb-4">Dein Key wird sicher und ausschließlich lokal in deinem Browser gespeichert (`localStorage`). Das Modell ist fest auf <code>openai/gpt-oss-120b</code> eingestellt.</p>
             
-            <div class="mb-4">
-                <label class="block text-sm font-semibold mb-2">API Key</label>
-                <input type="password" id="apiKeyInput" placeholder="Dein API-Key..." class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-
             <div class="mb-6">
-                <label class="block text-sm font-semibold mb-2">Modell-Name (z.B. gpt-oss-120b)</label>
-                <input type="text" id="modelInput" value="gpt-oss-120b" placeholder="gpt-oss-120b" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
-                <p class="text-xs text-gray-500 mt-1">Standardmäßig auf dein Modell eingestellt.</p>
+                <label class="block text-sm font-semibold mb-2">OpenAI API Key</label>
+                <input type="password" id="apiKeyInput" placeholder="sk-..." class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             
             <div class="flex justify-end gap-3">
                 <button onclick="closeSettings()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2.5 rounded-xl text-sm font-semibold">Abbrechen</button>
-                <button onclick="saveSettings()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold">Speichern</button>
+                <button onclick="saveApiKey()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold">Speichern</button>
             </div>
         </div>
     </div>
@@ -146,7 +140,6 @@
         // Modal öffnen / schließen
         function openSettings() {
             document.getElementById('apiKeyInput').value = localStorage.getItem('user_ai_api_key') || '';
-            document.getElementById('modelInput').value = localStorage.getItem('user_ai_model') || 'gpt-oss-120b';
             document.getElementById('settingsModal').classList.remove('hidden');
         }
 
@@ -154,20 +147,18 @@
             document.getElementById('settingsModal').classList.add('hidden');
         }
 
-        function saveSettings() {
+        function saveApiKey() {
             const key = document.getElementById('apiKeyInput').value.trim();
-            const model = document.getElementById('modelInput').value.trim();
             if (key) {
                 localStorage.setItem('user_ai_api_key', key);
-                localStorage.setItem('user_ai_model', model || 'gpt-oss-120b');
-                alert('Einstellungen erfolgreich im Browser gespeichert!');
+                alert('API-Key erfolgreich im Browser gespeichert!');
                 closeSettings();
             } else {
                 alert('Bitte gib einen gültigen API-Key ein.');
             }
         }
 
-        // Beim ersten Laden prüfen, ob Settings leer sind -> Modal öffnen
+        // Beim ersten Laden prüfen, ob Key fehlt -> Modal öffnen
         window.addEventListener('DOMContentLoaded', () => {
             if (!localStorage.getItem('user_ai_api_key')) {
                 openSettings();
@@ -179,13 +170,15 @@
             e.preventDefault();
             
             const apiKey = localStorage.getItem('user_ai_api_key');
-            const modelName = localStorage.getItem('user_ai_model') || 'gpt-oss-120b';
-
             if (!apiKey) {
                 alert('Bitte hinterlege zuerst deinen API-Key in den Einstellungen (⚙️)!');
                 openSettings();
                 return;
             }
+
+            // Festes Modell und Endpoint verankert
+            const modelName = 'openai/gpt-oss-120b';
+            const apiEndpoint = 'https://api.openai.com/v1/chat/completions';
 
             // Formulardaten einsammeln
             const category = document.getElementById('contractCategory').value;
@@ -204,7 +197,7 @@
             const resultContainer = document.getElementById('resultContainer');
             const outputLetter = document.getElementById('outputLetter');
             resultContainer.classList.remove('hidden');
-            outputLetter.value = "Formuliere rechtssicheren Geschäftsbrief...";
+            outputLetter.value = "Formuliere rechtssicheren Geschäftsbrief mit openai/gpt-oss-120b...";
 
             // Der professionelle System-Prompt für saubere, fehlerfreie Kündigungen
             const systemPrompt = `Du bist ein hochpräziser juristischer Assistent für deutsches Vertragsrecht. Erstelle absolut professionelle, formgerechte und rechtssichere deutsche Kündigungen im Geschäftsbrief-Stil (nach DIN 5008). 
@@ -225,9 +218,6 @@
               E-Mail: ${senderEmail || 'Nicht angegeben'}`;
 
             try {
-                // OpenAI-kompatibler Endpunkt (kann je nach Plattform angepasst werden, Standard ist OpenAI)
-                const apiEndpoint = 'https://api.openai.com/v1/chat/completions';
-
                 const response = await fetch(apiEndpoint, {
                     method: 'POST',
                     headers: {
@@ -244,7 +234,7 @@
                     })
                 });
 
-                const data = await response.json();
+                const data = wasResponseJson = await response.json();
 
                 if (data.error) {
                     throw new Error(data.error.message);
