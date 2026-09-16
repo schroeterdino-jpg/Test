@@ -3,121 +3,245 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KI Kündigungs-Assistent</title>
+    <title>Profi Kündigungs-Assistent</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            body * { visibility: hidden; }
+            #printArea, #printArea * { visibility: visible; }
+            #printArea {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                padding: 20px;
+                box-shadow: none !important;
+            }
+            .no-print { display: none !important; }
+        }
+    </style>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans min-h-screen p-4 md:p-8">
-    <div class="max-w-3xl mx-auto bg-white p-6 md:p-8 rounded-2xl shadow-xl my-6">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen p-4 md:p-8">
+    <div class="max-w-4xl mx-auto bg-white p-6 md:p-10 rounded-3xl shadow-xl my-6 border border-slate-100">
         
-        <!-- Header mit Einstellungs-Button -->
-        <div class="flex justify-between items-center mb-6 border-b pb-4">
-            <h1 class="text-2xl font-bold text-gray-900">📄 KI Kündigungs-Assistent</h1>
-            <button onclick="openSettings()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-xl text-sm font-semibold transition">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8 border-b pb-4 no-print">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">📄 Kündigungs-Profi</h1>
+                <p class="text-xs text-slate-500 mt-1">Rechtssicher, schnell & universell einsetzbar</p>
+            </div>
+            <button onclick="openSettings()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-2xl text-sm font-semibold transition flex items-center gap-2">
                 ⚙️ Einstellungen
             </button>
         </div>
         
-        <form id="kuendigungForm" class="space-y-6">
+        <form id="kuendigungForm" class="space-y-8 no-print">
             
-            <!-- 1. Vertragsart / Dropdown -->
-            <div>
-                <label class="block text-sm font-semibold mb-2">Art des Vertrags / Branche</label>
-                <select id="contractCategory" onchange="updateDynamicFields()" class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-                    <option value="Strom / Gas">⚡ Strom- & Gasversorger</option>
-                    <option value="Fitnessstudio">🏋️ Fitnessstudio</option>
-                    <option value="Internet / Mobilfunk">📱 Internet, Festnetz & Mobilfunk</option>
-                    <option value="Streaming / Abo">🎬 Streaming & Abonnements</option>
-                    <option value="Versicherung">🛡️ Versicherung</option>
-                    <option value="Sonstiges">📝 Sonstiger Vertrag</option>
-                </select>
-            </div>
-
-            <!-- 2. Unternehmensdaten -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- SCHRITT 1: Empfänger & Live-Suche -->
+            <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-100 space-y-4">
+                <h2 class="text-base font-bold text-blue-900 flex items-center gap-2">
+                    <span>1.</span> Vertragspartner & Adresse suchen
+                </h2>
+                
                 <div>
-                    <label class="block text-sm font-semibold mb-2">Name des Unternehmens / Anbieters</label>
-                    <input type="text" id="companyName" required placeholder="z.B. E.ON, FitX, Vodafone" class="w-full p-3 border rounded-xl">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Globale Schnellsuche (KI-gestützt)</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="companySearchInput" placeholder="z.B. Easy Fitness Schwarzenbek, E.ON, Netflix..." class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <button type="button" onclick="searchCompanyAddress()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl text-sm font-semibold transition shrink-0 shadow-sm">
+                            Adresse finden 🔍
+                        </button>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-semibold mb-2">Vertrags- / Mitgliedsnummer</label>
-                    <input type="text" id="contractNumber" required placeholder="z.B. V-123456789" class="w-full p-3 border rounded-xl">
-                </div>
-            </div>
 
-            <!-- Dynamisches Zusatzfeld -->
-            <div id="dynamicFieldContainer" class="hidden">
-                <label id="dynamicLabel" class="block text-sm font-semibold mb-2">Zusatzinfo</label>
-                <input type="text" id="extraInfo" placeholder="" class="w-full p-3 border rounded-xl">
-            </div>
-
-            <!-- 3. Absenderdaten -->
-            <div class="border-t pt-4">
-                <h2 class="text-lg font-semibold mb-4 text-gray-700">Deine Absenderdaten</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                     <div>
-                        <label class="block text-sm font-semibold mb-2">Vollständiger Name</label>
-                        <input type="text" id="senderName" required placeholder="Dino ..." class="w-full p-3 border rounded-xl">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Name des Unternehmens</label>
+                        <input type="text" id="companyName" required placeholder="z.B. Easy Fitness" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold mb-2">Straße & Hausnummer</label>
-                        <input type="text" id="senderStreet" required placeholder="Musterstraße 1" class="w-full p-3 border rounded-xl">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Straße & Hausnummer</label>
+                        <input type="text" id="companyStreet" required placeholder="z.B. Hamburger Straße 10" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">PLZ & Ort</label>
+                        <input type="text" id="companyCity" required placeholder="z.B. 21493 Schwarzenbek" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Vertrags- / Mitgliedsnummer</label>
+                        <input type="text" id="contractNumber" required placeholder="z.B. V-123456789" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCHRITT 2: Kündigungsdetails & Art -->
+            <div class="space-y-4">
+                <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                    <span>2.</span> Art der Kündigung & Konditionen
+                </h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Kündigungsart</label>
+                        <select id="terminationType" onchange="toggleReasonField()" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="Fristgerecht zum nächstmöglichen Termin">Fristgerecht (Standard)</option>
+                            <option value="Außerordentlich (fristlos aus wichtigem Grund)">Außerordentlich / Fristlos</option>
+                            <option value="Widerruf innerhalb der 14-tägigen Frist">Widerruf (14 Tage)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Branche / Vertragskategorie</label>
+                        <select id="contractCategory" onchange="updateDynamicFields()" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="Fitnessstudio">🏋️ Fitnessstudio</option>
+                            <option value="Strom / Gas">⚡ Strom & Gas</option>
+                            <option value="Internet / Mobilfunk">📱 Internet & Mobilfunk</option>
+                            <option value="Streaming / Abo">🎬 Streaming & Abo</option>
+                            <option value="Versicherung">🛡️ Versicherung</option>
+                            <option value="Sonstiges">📝 Allgemeiner Vertrag</option>
+                        </select>
+                    </div>
+                    <div id="dynamicFieldContainer" class="hidden">
+                        <label id="dynamicLabel" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Zusatzinfo</label>
+                        <input type="text" id="extraInfo" placeholder="" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
+                    </div>
+                </div>
+
+                <!-- Grund für außerordentliche Kündigung -->
+                <div id="reasonFieldContainer" class="hidden bg-amber-50 p-4 rounded-xl border border-amber-200">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-amber-900 mb-1">Wichtiger Grund für fristlose Kündigung / Widerruf</label>
+                    <input type="text" id="terminationReason" placeholder="z.B. Umzug ins Ausland, Preiserhöhung, Todesfall..." class="w-full p-3 bg-white border border-amber-300 rounded-xl text-sm">
+                </div>
+
+                <!-- Zusätzliche Optionen -->
+                <div class="flex flex-wrap gap-6 pt-2">
+                    <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-700">
+                        <input type="checkbox" id="revokeSepa" checked class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                        SEPA-Lastschriftmandat widerrufen
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-700">
+                        <input type="checkbox" id="requestConfirmation" checked class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                        Schriftliche Bestätigung mit Datum fordern
+                    </label>
+                </div>
+            </div>
+
+            <!-- SCHRITT 3: Absenderdaten -->
+            <div class="space-y-4 border-t pt-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <span>3.</span> Deine Absenderdaten
+                    </h2>
+                    <button type="button" onclick="saveSenderData()" class="text-xs text-blue-600 hover:text-blue-800 font-semibold">💾 Daten im Browser speichern</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Vollständiger Name</label>
+                        <input type="text" id="senderName" required value="Dino Schröter" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Straße & Hausnummer</label>
+                        <input type="text" id="senderStreet" required placeholder="Musterstraße 1" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-semibold mb-2">PLZ & Ort</label>
-                        <input type="text" id="senderCity" required placeholder="12345 Musterstadt" class="w-full p-3 border rounded-xl">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">PLZ & Ort</label>
+                        <input type="text" id="senderCity" required value="21493 Schwarzenbek" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold mb-2">E-Mail-Adresse (für Rückfragen)</label>
-                        <input type="email" id="senderEmail" placeholder="name@example.com" class="w-full p-3 border rounded-xl">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">E-Mail-Adresse</label>
+                        <input type="email" id="senderEmail" placeholder="name@example.com" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
                     </div>
                 </div>
             </div>
 
-            <!-- Absenden Button -->
-            <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold p-4 rounded-xl transition duration-200 shadow-lg">
-                Kündigung professionell generieren 🚀
+            <!-- Generierungs-Button -->
+            <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold p-4 rounded-2xl transition duration-200 shadow-lg text-base">
+                Rechtssichere Kündigung generieren 🚀
             </button>
         </form>
 
         <!-- Ausgabe-Bereich -->
-        <div id="resultContainer" class="mt-8 hidden border-t pt-6">
-            <h2 class="text-lg font-semibold mb-2 text-gray-700">Generiertes Schreiben:</h2>
-            <textarea id="outputLetter" rows="14" class="w-full p-4 border rounded-xl bg-gray-50 font-mono text-sm leading-relaxed outline-none"></textarea>
-            <div class="flex gap-4 mt-4">
-                <button onclick="copyToClipboard()" class="bg-gray-800 hover:bg-gray-900 text-white px-5 py-3 rounded-xl text-sm font-medium transition">
+        <div id="resultContainer" class="mt-8 hidden border-t pt-8">
+            <h2 class="text-lg font-bold mb-3 text-slate-800 no-print">Dein fertiges Kündigungsschreiben:</h2>
+            
+            <div id="printArea" class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                <textarea id="outputLetter" rows="16" class="w-full p-4 bg-white border border-slate-200 rounded-xl font-mono text-sm leading-relaxed outline-none resize-y shadow-inner"></textarea>
+            </div>
+
+            <div class="flex flex-wrap gap-3 mt-6 no-print">
+                <button onclick="copyToClipboard()" class="bg-slate-800 hover:bg-slate-900 text-white px-5 py-3 rounded-xl text-sm font-semibold transition shadow-sm">
                     In Zwischenablage kopieren 📋
+                </button>
+                <button onclick="printLetter()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl text-sm font-semibold transition shadow-sm flex items-center gap-2">
+                    🖨️ Direkt auf DIN A4 drucken
+                </button>
+                <button onclick="downloadAsTxt()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-5 py-3 rounded-xl text-sm font-semibold transition">
+                    Als .txt Datei speichern 💾
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Einstellungs-Modal für API-Key und Endpoint -->
-    <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white p-6 md:p-8 rounded-2xl max-w-md w-full shadow-2xl">
-            <h3 class="text-xl font-bold mb-4">🔑 API-Konfiguration</h3>
-            <p class="text-sm text-gray-600 mb-4">Deine Daten werden sicher lokal in deinem Browser gespeichert (<code>localStorage</code>). Das Modell ist fest auf <code>openai/gpt-oss-120b</code> eingestellt.</p>
+    <!-- Einstellungs-Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white p-6 md:p-8 rounded-3xl max-w-md w-full shadow-2xl border border-slate-100">
+            <h3 class="text-xl font-bold mb-2 text-slate-900">🔑 API-Konfiguration</h3>
+            <p class="text-xs text-slate-500 mb-6">Deine Daten verbleiben sicher im lokalen Speicher deines Browsers (<code>localStorage</code>).</p>
             
             <div class="mb-4">
-                <label class="block text-sm font-semibold mb-2">API Endpoint URL</label>
-                <input type="text" id="apiEndpointInput" value="https://api.groq.com/openai/v1/chat/completions" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono">
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">API Endpoint URL</label>
+                <input type="text" id="apiEndpointInput" value="https://api.groq.com/openai/v1/chat/completions" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono outline-none">
             </div>
 
             <div class="mb-6">
-                <label class="block text-sm font-semibold mb-2">API Key</label>
-                <input type="password" id="apiKeyInput" placeholder="gsk_..." class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Groq API Key</label>
+                <input type="password" id="apiKeyInput" placeholder="gsk_..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none">
             </div>
             
             <div class="flex justify-end gap-3">
-                <button onclick="closeSettings()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2.5 rounded-xl text-sm font-semibold">Abbrechen</button>
+                <button onclick="closeSettings()" class="bg-slate-100 hover:bg-slate-200 px-4 py-2.5 rounded-xl text-sm font-semibold">Abbrechen</button>
                 <button onclick="saveSettings()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold">Speichern</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Dynamische Felder je nach Branche einblenden
+        // Laden gespeicherter Absenderdaten beim Start
+        window.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('sender_name')) document.getElementById('senderName').value = localStorage.getItem('sender_name');
+            if (localStorage.getItem('sender_street')) document.getElementById('senderStreet').value = localStorage.getItem('sender_street');
+            if (localStorage.getItem('sender_city')) document.getElementById('senderCity').value = localStorage.getItem('sender_city');
+            if (localStorage.getItem('sender_email')) document.getElementById('senderEmail').value = localStorage.getItem('sender_email');
+
+            if (!localStorage.getItem('user_ai_api_key')) {
+                openSettings();
+            }
+            updateDynamicFields();
+        });
+
+        function saveSenderData() {
+            localStorage.setItem('sender_name', document.getElementById('senderName').value);
+            localStorage.setItem('sender_street', document.getElementById('senderStreet').value);
+            localStorage.setItem('sender_city', document.getElementById('senderCity').value);
+            localStorage.setItem('sender_email', document.getElementById('senderEmail').value);
+            alert('Absenderdaten erfolgreich im Browser gespeichert!');
+        }
+
+        function toggleReasonField() {
+            const type = document.getElementById('terminationType').value;
+            const container = document.getElementById('reasonFieldContainer');
+            if (type.includes('Außerordentlich') || type.includes('Widerruf')) {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
         function updateDynamicFields() {
             const category = document.getElementById('contractCategory').value;
             const container = document.getElementById('dynamicFieldContainer');
@@ -126,23 +250,75 @@
 
             if (category === 'Strom / Gas') {
                 container.classList.remove('hidden');
-                label.innerText = 'Zählernummer (falls zur Hand)';
-                input.placeholder = 'z.B. 1ZBW12345678';
+                label.innerText = 'Zählernummer';
+                input.placeholder = 'z.B. 1ZBW123456';
             } else if (category === 'Internet / Mobilfunk') {
                 container.classList.remove('hidden');
-                label.innerText = 'Telefonnummer / Anschluss-ID';
-                input.placeholder = 'z.B. 040 / 1234567';
+                label.innerText = 'Rufnummer / Anschluss-ID';
+                input.placeholder = 'z.B. 040 / 123456';
             } else if (category === 'Versicherung') {
                 container.classList.remove('hidden');
                 label.innerText = 'Versicherungsscheinnummer';
-                input.placeholder = 'z.B. VS-987654321';
+                input.placeholder = 'z.B. VS-987654';
             } else {
                 container.classList.add('hidden');
                 input.value = '';
             }
         }
 
-        // Modal öffnen / schließen
+        async function searchCompanyAddress() {
+            const query = document.getElementById('companySearchInput').value.trim();
+            const apiKey = localStorage.getItem('user_ai_api_key');
+            const apiEndpoint = localStorage.getItem('user_ai_endpoint') || 'https://api.groq.com/openai/v1/chat/completions';
+
+            if (!query) {
+                alert('Bitte gib einen Suchbegriff ein (z.B. Easy Fitness Schwarzenbek).');
+                return;
+            }
+            if (!apiKey) {
+                alert('Bitte hinterlege zuerst deinen API-Key in den Einstellungen!');
+                openSettings();
+                return;
+            }
+
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = "Suche...";
+
+            try {
+                const response = await fetch(apiEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'openai/gpt-oss-120b',
+                        messages: [
+                            { role: "system", content: "Antworte AUSSCHLIESSLICH im JSON-Format: {\"name\": \"Firmenname\", \"street\": \"Strasse Hausnummer\", \"city\": \"PLZ Ort\"}. Schätze bekannte deutsche Adressen präzise." },
+                            { role: "user", content: `Finde die offizielle Postanschrift für: ${query}` }
+                        ],
+                        temperature: 0.1
+                    })
+                });
+
+                const data = await response.json();
+                let raw = data.choices[0].message.content.trim().replace(/```json/g, '').replace(/```/g, '').trim();
+                const res = JSON.parse(raw);
+
+                document.getElementById('companyName').value = res.name || query;
+                document.getElementById('companyStreet').value = res.street || '';
+                document.getElementById('companyCity').value = res.city || '';
+                alert('Adresse erfolgreich ermittelt!');
+            } catch (err) {
+                alert('Adresse konnte nicht automatisch ermittelt werden. Bitte trage sie manuell ein.');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
+        }
+
         function openSettings() {
             document.getElementById('apiKeyInput').value = localStorage.getItem('user_ai_api_key') || '';
             document.getElementById('apiEndpointInput').value = localStorage.getItem('user_ai_endpoint') || 'https://api.groq.com/openai/v1/chat/completions';
@@ -159,80 +335,73 @@
             if (key) {
                 localStorage.setItem('user_ai_api_key', key);
                 localStorage.setItem('user_ai_endpoint', endpoint || 'https://api.groq.com/openai/v1/chat/completions');
-                alert('Einstellungen erfolgreich im Browser gespeichert!');
+                alert('Einstellungen gespeichert!');
                 closeSettings();
             } else {
                 alert('Bitte gib einen gültigen API-Key ein.');
             }
         }
 
-        // Beim ersten Laden prüfen, ob Key fehlt -> Modal öffnen
-        window.addEventListener('DOMContentLoaded', () => {
-            if (!localStorage.getItem('user_ai_api_key')) {
-                openSettings();
-            }
-        });
-
-        // Kündigung generieren per API-Call
         document.getElementById('kuendigungForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
             const apiKey = localStorage.getItem('user_ai_api_key');
             const apiEndpoint = localStorage.getItem('user_ai_endpoint') || 'https://api.groq.com/openai/v1/chat/completions';
 
             if (!apiKey) {
-                alert('Bitte hinterlege zuerst deinen API-Key in den Einstellungen (⚙️)!');
+                alert('Bitte API-Key in den Einstellungen hinterlegen!');
                 openSettings();
                 return;
             }
 
-            const modelName = 'openai/gpt-oss-120b';
-
-            // Formulardaten einsammeln
-            const category = document.getElementById('contractCategory').value;
-            const companyName = document.getElementById('companyName').value;
-            const contractNumber = document.getElementById('contractNumber').value;
-            const extraInfo = document.getElementById('extraInfo').value;
-            const senderName = document.getElementById('senderName').value;
-            const senderStreet = document.getElementById('senderStreet').value;
-            const senderCity = document.getElementById('senderCity').value;
-            const senderEmail = document.getElementById('senderEmail').value;
+            const data = {
+                category: document.getElementById('contractCategory').value,
+                type: document.getElementById('terminationType').value,
+                companyName: document.getElementById('companyName').value,
+                companyStreet: document.getElementById('companyStreet').value,
+                companyCity: document.getElementById('companyCity').value,
+                contractNumber: document.getElementById('contractNumber').value,
+                extraInfo: document.getElementById('extraInfo').value,
+                reason: document.getElementById('terminationReason').value,
+                revokeSepa: document.getElementById('revokeSepa').checked,
+                requestConfirmation: document.getElementById('requestConfirmation').checked,
+                senderName: document.getElementById('senderName').value,
+                senderStreet: document.getElementById('senderStreet').value,
+                senderCity: document.getElementById('senderCity').value,
+                senderEmail: document.getElementById('senderEmail').value
+            };
 
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
-            submitBtn.innerText = "KI schreibt Kündigung...";
+            submitBtn.innerText = "Erstelle rechtssicheres Schreiben...";
 
             const resultContainer = document.getElementById('resultContainer');
             const outputLetter = document.getElementById('outputLetter');
             resultContainer.classList.remove('hidden');
-            outputLetter.value = "Formuliere rechtssicheren Geschäftsbrief mit openai/gpt-oss-120b...";
+            outputLetter.value = "Generiere Dokument...";
 
-            const systemPrompt = `Du bist ein hochpräziser juristischer Assistent für deutsches Vertragsrecht. Erstelle absolut professionelle, formgerechte und rechtssichere deutsche Kündigungen im Geschäftsbrief-Stil (nach DIN 5008). 
-            - Verwende immer die Formulierung "fristgerecht zum nächstmöglichen Termin".
-            - Fordere unmissverständlich eine schriftliche Kündigungsbestätigung unter Angabe des genauen Beendigungsdatums ein.
-            - Füge den Satz hinzu, dass das SEPA-Lastschriftmandat zum Wirksamkeitsdatum widerrufen wird.
-            - Keine flapsigen Formulierungen, sauber strukturiert mit Absender, Empfänger, Betreff, Datum und Unterschriftenfeld.`;
+            const systemPrompt = `Du bist ein deutscher Fachexperte für Vertragsrecht und DIN 5008 Geschäftsbriefe. 
+            - Erstelle ein absolut professionelles, formelles Kündigungsschreiben.
+            - Keine Markdown-Sternchen (** oder *).
+            - Korrekte DIN 5008 Briefkopf-Anordnung (Absenderzeile klein über Empfänger, Datum rechts).
+            - Integriere exakt die gewünschten Bedingungen (SEPA-Widerruf, Bestätigungsaufforderung etc.).`;
 
-            const userPrompt = `Erstelle eine professionelle Kündigung für folgende Daten:
-            - Vertragsart: ${category}
-            - Unternehmen: ${companyName}
-            - Vertrags-/Mitgliedsnummer: ${contractNumber}
-            - Zusätzliche Info: ${extraInfo || 'Keine'}
-            - Absender: 
-              ${senderName}
-              ${senderStreet}
-              ${senderCity}
-              E-Mail: ${senderEmail || 'Nicht angegeben'}`;
+            const userPrompt = `Erstelle eine Kündigung nach folgenden Parametern:
+            - Art: ${data.type}
+            - Kategorie: ${data.category}
+            - Empfänger: ${data.companyName}, ${data.companyStreet}, ${data.companyCity}
+            - Vertragsnummer: ${data.contractNumber}
+            - Zusatzinfo: ${data.extraInfo || 'Keine'}
+            - Grund: ${data.reason || 'Keiner'}
+            - SEPA-Widerruf erwünscht: ${data.revokeSepa}
+            - Bestätigung erwünscht: ${data.requestConfirmation}
+            - Absender: ${data.senderName}, ${data.senderStreet}, ${data.senderCity}, E-Mail: ${data.senderEmail}`;
 
             try {
                 const response = await fetch(apiEndpoint, {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${apiKey}`,
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        model: modelName,
+                        model: 'openai/gpt-oss-120b',
                         messages: [
                             { role: "system", content: systemPrompt },
                             { role: "user", content: userPrompt }
@@ -241,29 +410,43 @@
                     })
                 });
 
-                const data = await response.json();
+                const resJson = await response.json();
+                if (resJson.error) throw new Error(resJson.error.message);
 
-                if (data.error) {
-                    throw new Error(data.error.message || JSON.stringify(data.error));
-                }
+                let raw = resJson.choices[0].message.content;
+                let clean = raw.replace(/\*\*/g, '').replace(/\*/g, '').replace(/&nbsp;/g, ' ');
 
-                outputLetter.value = data.choices[0].message.content;
+                outputLetter.value = clean;
                 resultContainer.scrollIntoView({ behavior: 'smooth' });
-
-            } catch (error) {
-                alert('Fehler bei der API-Anfrage: ' + error.message);
-                outputLetter.value = "Fehler: " + error.message;
+            } catch (err) {
+                alert('Fehler: ' + err.message);
+                outputLetter.value = "Fehler bei der Generierung.";
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerText = "Kündigung professionell generieren 🚀";
+                submitBtn.innerText = "Rechtssichere Kündigung generieren 🚀";
             }
         });
 
         function copyToClipboard() {
-            const textarea = document.getElementById('outputLetter');
-            textarea.select();
+            const ta = document.getElementById('outputLetter');
+            ta.select();
             document.execCommand('copy');
-            alert('Kündigung in die Zwischenablage kopiert!');
+            alert('In Zwischenablage kopiert!');
+        }
+
+        function printLetter() {
+            window.print();
+        }
+
+        function downloadAsTxt() {
+            const text = document.getElementById('outputLetter').value;
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Kuendigung.txt';
+            a.click();
+            URL.revokeObjectURL(url);
         }
     </script>
 </body>
