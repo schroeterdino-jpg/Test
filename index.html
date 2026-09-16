@@ -13,7 +13,7 @@
         <div class="flex justify-between items-center mb-6 border-b pb-4">
             <h1 class="text-2xl font-bold text-gray-900">📄 KI Kündigungs-Assistent</h1>
             <button onclick="openSettings()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-xl text-sm font-semibold transition">
-                ⚙️ API-Key Einstellungen
+                ⚙️ Einstellungen
             </button>
         </div>
         
@@ -55,7 +55,7 @@
                 <h2 class="text-lg font-semibold mb-4 text-gray-700">Deine Absenderdaten</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label class="block text-sm font-semibold mb-2">Vollständiger Name (Dino)</label>
+                        <label class="block text-sm font-semibold mb-2">Vollständiger Name</label>
                         <input type="text" id="senderName" required placeholder="Dino ..." class="w-full p-3 border rounded-xl">
                     </div>
                     <div>
@@ -93,20 +93,25 @@
         </div>
     </div>
 
-    <!-- Einstellungs-Modal nur für den API Key -->
+    <!-- Einstellungs-Modal für API-Key und Endpoint -->
     <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4">
         <div class="bg-white p-6 md:p-8 rounded-2xl max-w-md w-full shadow-2xl">
-            <h3 class="text-xl font-bold mb-4">🔑 API-Key Konfiguration</h3>
-            <p class="text-sm text-gray-600 mb-4">Dein Key wird sicher und ausschließlich lokal in deinem Browser gespeichert (`localStorage`). Das Modell ist fest auf <code>openai/gpt-oss-120b</code> eingestellt.</p>
+            <h3 class="text-xl font-bold mb-4">🔑 API-Konfiguration</h3>
+            <p class="text-sm text-gray-600 mb-4">Deine Daten werden sicher lokal in deinem Browser gespeichert (<code>localStorage</code>). Das Modell ist fest auf <code>openai/gpt-oss-120b</code> eingestellt.</p>
             
+            <div class="mb-4">
+                <label class="block text-sm font-semibold mb-2">API Endpoint URL</label>
+                <input type="text" id="apiEndpointInput" value="https://api.groq.com/openai/v1/chat/completions" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono">
+            </div>
+
             <div class="mb-6">
-                <label class="block text-sm font-semibold mb-2">OpenAI API Key</label>
-                <input type="password" id="apiKeyInput" placeholder="sk-..." class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+                <label class="block text-sm font-semibold mb-2">API Key</label>
+                <input type="password" id="apiKeyInput" placeholder="gsk_..." class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             
             <div class="flex justify-end gap-3">
                 <button onclick="closeSettings()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2.5 rounded-xl text-sm font-semibold">Abbrechen</button>
-                <button onclick="saveApiKey()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold">Speichern</button>
+                <button onclick="saveSettings()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold">Speichern</button>
             </div>
         </div>
     </div>
@@ -140,6 +145,7 @@
         // Modal öffnen / schließen
         function openSettings() {
             document.getElementById('apiKeyInput').value = localStorage.getItem('user_ai_api_key') || '';
+            document.getElementById('apiEndpointInput').value = localStorage.getItem('user_ai_endpoint') || 'https://api.groq.com/openai/v1/chat/completions';
             document.getElementById('settingsModal').classList.remove('hidden');
         }
 
@@ -147,11 +153,13 @@
             document.getElementById('settingsModal').classList.add('hidden');
         }
 
-        function saveApiKey() {
+        function saveSettings() {
             const key = document.getElementById('apiKeyInput').value.trim();
+            const endpoint = document.getElementById('apiEndpointInput').value.trim();
             if (key) {
                 localStorage.setItem('user_ai_api_key', key);
-                alert('API-Key erfolgreich im Browser gespeichert!');
+                localStorage.setItem('user_ai_endpoint', endpoint || 'https://api.groq.com/openai/v1/chat/completions');
+                alert('Einstellungen erfolgreich im Browser gespeichert!');
                 closeSettings();
             } else {
                 alert('Bitte gib einen gültigen API-Key ein.');
@@ -170,15 +178,15 @@
             e.preventDefault();
             
             const apiKey = localStorage.getItem('user_ai_api_key');
+            const apiEndpoint = localStorage.getItem('user_ai_endpoint') || 'https://api.groq.com/openai/v1/chat/completions';
+
             if (!apiKey) {
                 alert('Bitte hinterlege zuerst deinen API-Key in den Einstellungen (⚙️)!');
                 openSettings();
                 return;
             }
 
-            // Festes Modell und Endpoint verankert
             const modelName = 'openai/gpt-oss-120b';
-            const apiEndpoint = 'https://api.openai.com/v1/chat/completions';
 
             // Formulardaten einsammeln
             const category = document.getElementById('contractCategory').value;
@@ -199,7 +207,6 @@
             resultContainer.classList.remove('hidden');
             outputLetter.value = "Formuliere rechtssicheren Geschäftsbrief mit openai/gpt-oss-120b...";
 
-            // Der professionelle System-Prompt für saubere, fehlerfreie Kündigungen
             const systemPrompt = `Du bist ein hochpräziser juristischer Assistent für deutsches Vertragsrecht. Erstelle absolut professionelle, formgerechte und rechtssichere deutsche Kündigungen im Geschäftsbrief-Stil (nach DIN 5008). 
             - Verwende immer die Formulierung "fristgerecht zum nächstmöglichen Termin".
             - Fordere unmissverständlich eine schriftliche Kündigungsbestätigung unter Angabe des genauen Beendigungsdatums ein.
@@ -234,10 +241,10 @@
                     })
                 });
 
-                const data = wasResponseJson = await response.json();
+                const data = await response.json();
 
                 if (data.error) {
-                    throw new Error(data.error.message);
+                    throw new Error(data.error.message || JSON.stringify(data.error));
                 }
 
                 outputLetter.value = data.choices[0].message.content;
