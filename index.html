@@ -3,202 +3,271 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Automatisierter Gefährdungs- & Near-Miss-Report</title>
-    <style>
-        /* --- Screen Styling --- */
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        h1 { font-size: 22px; color: #003366; border-bottom: 2px solid #003366; padding-bottom: 8px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
-        input[type="text"], select, textarea {
-            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
-        }
-        textarea { resize: vertical; height: 100px; }
-        button {
-            background-color: #003366; color: white; border: none; padding: 12px 20px;
-            font-size: 16px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 10px;
-        }
-        button:hover { background-color: #002244; }
-
-        /* --- Report Print / A4 Layout Styling --- */
-        .report-preview {
-            margin-top: 40px; border: 2px solid #003366; padding: 25px; background: #fff; display: none;
-        }
-        .report-header { display: flex; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 15px; }
-        .report-header div { font-size: 14px; }
-        .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        .box { border: 1px solid #ccc; padding: 10px; border-radius: 4px; background: #fafafa; }
-        .photo-section { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
-        .photo-box { border: 1px solid #ccc; padding: 8px; text-align: center; background: #fff; }
-        .photo-box img { max-width: 100%; height: 140px; object-fit: cover; border-radius: 3px; }
-        .photo-caption { font-size: 12px; margin-top: 5px; color: #555; }
-
-        /* --- Print Specifics (DIN A4 Clean Export) --- */
-        @media print {
-            body { background: none; padding: 0; }
-            .container > *:not(#reportOutput) { display: none; } /* Versteckt das Eingabeformular beim Drucken */
-            .report-preview { display: block !important; border: none; margin: 0; padding: 0; width: 100%; box-shadow: none; }
-            button { display: none; }
-        }
-    </style>
+    <title>KI Kündigungs-Assistent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-
-<div class="container">
-    <h1>Smart Report Generator</h1>
-    
-    <!-- Eingabeformular -->
-    <div class="form-group">
-        <label for="reportType">Berichtsart:</label>
-        <select id="reportType">
-            <option value="Near Miss Report (Beinaheunfall)">Near Miss Report (Beinaheunfall)</option>
-            <option value="Gefährdungsbericht / Mängelmeldung">Gefährdungsbericht / Mängelmeldung</option>
-        </select>
-    </div>
-
-    <div class="form-group">
-        <label for="department">Bereich / Kostenstelle:</label>
-        <input type="text" id="department" value="Kleinteillager (KTL)" placeholder="z.B. KTL Gang 3">
-    </div>
-
-    <div class="form-group">
-        <label for="reporter">Melder:</label>
-        <input type="text" id="reporter" value="Dino Schröter">
-    </div>
-
-    <div class="form-group">
-        <label for="rawNotes">Stichpunkte zum Vorfall (Die App sortiert & formuliert daraus den Text):</label>
-        <textarea id="rawNotes" placeholder="Eingangsbereich Regal 4: Schwere Europalette steht 15cm über Kante. Gefahr des Herabfallens. Sofortige Umstapelung und Absicherung veranlasst.">Übersicht: Eingangsbereich Regal 4, Palette steht 15cm über Kante.
-Detail: Nahaufnahme der losen Umreifung und der schiefen Position.
-Maßnahme: Sofortige Korrektur und Einweisung der Schicht.</textarea>
-    </div>
-
-    <div class="form-group">
-        <label for="imageUpload">Fotos auswählen (Mehrfachauswahl):</label>
-        <input type="file" id="imageUpload" accept="image/*" multiple>
-    </div>
-
-    <button onclick="generateReport()">Report generieren & Drucken</button>
-
-    <!-- Fertiger Report (Wird nach Klick sichtbar & formatiert) -->
-    <div id="reportOutput" class="report-preview">
-        <div class="report-header">
-            <div><strong>Betriebs-Sicherheitsreport</strong><br><span id="outType">Near Miss Report</span></div>
-            <div>Datum: <span id="outDate"></span><br>Bereich: <span id="outDept"></span></div>
-        </div>
-
-        <div class="report-grid">
-            <div class="box">
-                <label>Melder / Verantwortlich:</label>
-                <span id="outReporter">Dino Schröter</span>
-            </div>
-            <div class="box">
-                <label>Status:</label>
-                <span style="color: green; font-weight: bold;">Erfasst & Ausgearbeitet</span>
-            </div>
-        </div>
-
-        <div class="box" style="margin-bottom: 15px;">
-            <label><strong>Automatisierter Untersuchungs- und Maßnahmenbericht:</strong></label>
-            <p id="outText" style="white-space: pre-line; font-size: 14px; line-height: 1.4;"></p>
-        </div>
-
-        <label><strong>Visuelle Dokumentation (Automatisch zugeordnet):</strong></label>
-        <div class="photo-section" id="outPhotos">
-            <!-- Dynamische Bilder landen hier -->
-        </div>
-    </div>
-</div>
-
-<script>
-    function generateReport() {
-        // 1. Kopfdaten füllen
-        const type = document.getElementById('reportType').value;
-        const dept = document.getElementById('department').value;
-        const reporter = document.getElementById('reporter').value;
-        const notes = document.getElementById('rawNotes').value;
-
-        document.getElementById('outType').innerText = type;
-        document.getElementById('outDept').innerText = dept;
-        document.getElementById('outReporter').innerText = reporter;
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen p-4 md:p-8">
+    <div class="max-w-3xl mx-auto bg-white p-6 md:p-8 rounded-2xl shadow-xl my-6">
         
-        // Aktuelles Datum setzen
-        const today = new Date().toLocaleDateString('de-DE');
-        document.getElementById('outDate').innerText = today;
+        <!-- Header mit Einstellungs-Button -->
+        <div class="flex justify-between items-center mb-6 border-b pb-4">
+            <h1 class="text-2xl font-bold text-gray-900">📄 KI Kündigungs-Assistent</h1>
+            <button onclick="openSettings()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-xl text-sm font-semibold transition">
+                ⚙️ API & Modell Einstellungen
+            </button>
+        </div>
+        
+        <form id="kuendigungForm" class="space-y-6">
+            
+            <!-- 1. Vertragsart / Dropdown -->
+            <div>
+                <label class="block text-sm font-semibold mb-2">Art des Vertrags / Branche</label>
+                <select id="contractCategory" onchange="updateDynamicFields()" class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option value="Strom / Gas">⚡ Strom- & Gasversorger</option>
+                    <option value="Fitnessstudio">🏋️ Fitnessstudio</option>
+                    <option value="Internet / Mobilfunk">📱 Internet, Festnetz & Mobilfunk</option>
+                    <option value="Streaming / Abo">🎬 Streaming & Abonnements</option>
+                    <option value="Versicherung">🛡️ Versicherung</option>
+                    <option value="Sonstiges">📝 Sonstiger Vertrag</option>
+                </select>
+            </div>
 
-        // 2. Stichpunkte in Fließtext verwandeln (Mini-Intelligenz)
-        // Hier greift später die echte KI-Logik ein, für den Prototypen formen wir es sauber auf:
-        let formattedText = "Basierend auf den erfassten Stichpunkten ergibt sich folgender Vorfall:\n\n" + notes;
-        document.getElementById('outText').innerText = formattedText;
+            <!-- 2. Unternehmensdaten -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Name des Unternehmens / Anbieters</label>
+                    <input type="text" id="companyName" required placeholder="z.B. E.ON, FitX, Vodafone" class="w-full p-3 border rounded-xl">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Vertrags- / Mitgliedsnummer</label>
+                    <input type="text" id="contractNumber" required placeholder="z.B. V-123456789" class="w-full p-3 border rounded-xl">
+                </div>
+            </div>
 
-        // 3. Bilder verarbeiten & automatisch zuordnen
-        const fileInput = document.getElementById('imageUpload');
-        const photoContainer = document.getElementById('outPhotos');
-        photoContainer.innerHTML = ''; // Vorherige Bilder löschen
+            <!-- Dynamisches Zusatzfeld -->
+            <div id="dynamicFieldContainer" class="hidden">
+                <label id="dynamicLabel" class="block text-sm font-semibold mb-2">Zusatzinfo</label>
+                <input type="text" id="extraInfo" placeholder="" class="w-full p-3 border rounded-xl">
+            </div>
 
-        if (fileInput.files && fileInput.files.length > 0) {
-            // Stichpunkte in Zeilen aufteilen, um Kategorien zu matchen
-            const noteLines = notes.split('\n');
+            <!-- 3. Absenderdaten -->
+            <div class="border-t pt-4">
+                <h2 class="text-lg font-semibold mb-4 text-gray-700">Deine Absenderdaten</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Vollständiger Name (Dino)</label>
+                        <input type="text" id="senderName" required placeholder="Dino ..." class="w-full p-3 border rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Straße & Hausnummer</label>
+                        <input type="text" id="senderStreet" required placeholder="Musterstraße 1" class="w-full p-3 border rounded-xl">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">PLZ & Ort</label>
+                        <input type="text" id="senderCity" required placeholder="12345 Musterstadt" class="w-full p-3 border rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">E-Mail-Adresse (für Rückfragen)</label>
+                        <input type="email" id="senderEmail" placeholder="name@example.com" class="w-full p-3 border rounded-xl">
+                    </div>
+                </div>
+            </div>
 
-            for (let i = 0; i < fileInput.files.length; i++) {
-                const file = fileInput.files[i];
-                const reader = new FileReader();
+            <!-- Absenden Button -->
+            <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold p-4 rounded-xl transition duration-200 shadow-lg">
+                Kündigung professionell generieren 🚀
+            </button>
+        </form>
 
-                reader.onload = function(e) {
-                    const box = document.createElement('div');
-                    box.className = 'photo-box';
+        <!-- Ausgabe-Bereich -->
+        <div id="resultContainer" class="mt-8 hidden border-t pt-6">
+            <h2 class="text-lg font-semibold mb-2 text-gray-700">Generiertes Schreiben:</h2>
+            <textarea id="outputLetter" rows="14" class="w-full p-4 border rounded-xl bg-gray-50 font-mono text-sm leading-relaxed outline-none"></textarea>
+            <div class="flex gap-4 mt-4">
+                <button onclick="copyToClipboard()" class="bg-gray-800 hover:bg-gray-900 text-white px-5 py-3 rounded-xl text-sm font-medium transition">
+                    In Zwischenablage kopieren 📋
+                </button>
+            </div>
+        </div>
+    </div>
 
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
+    <!-- Einstellungs-Modal für API Key und Modell -->
+    <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white p-6 md:p-8 rounded-2xl max-w-md w-full shadow-2xl">
+            <h3 class="text-xl font-bold mb-4">⚙️ Konfiguration</h3>
+            <p class="text-sm text-gray-600 mb-4">Deine Daten und dein Key werden absolut sicher und ausschließlich lokal in deinem Browser gespeichert (`localStorage`).</p>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-semibold mb-2">API Key</label>
+                <input type="password" id="apiKeyInput" placeholder="Dein API-Key..." class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
 
-                    const caption = document.createElement('div');
-                    caption.className = 'photo-caption';
-                    
-                    // Automatische Zuordnung: Versuche Bild 1 als Übersicht, Bild 2 als Detail zuzuordnen
-                    let assignedLabel = `Dokumentation Bild ${i + 1}`;
-                    if (i === 0 && noteLines[0]) {
-                        assignedLabel = "Übersicht: " + noteLines[0].substring(0, 40) + "...";
-                    } else if (i === 1 && noteLines[1]) {
-                        assignedLabel = "Detail: " + noteLines[1].substring(0, 40) + "...";
-                    } else if (noteLines[i]) {
-                        assignedLabel = noteLines[i].substring(0, 40) + "...";
-                    }
-                    
-                    caption.innerText = assignedLabel;
+            <div class="mb-6">
+                <label class="block text-sm font-semibold mb-2">Modell-Name (z.B. gpt-oss-120b)</label>
+                <input type="text" id="modelInput" value="gpt-oss-120b" placeholder="gpt-oss-120b" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+                <p class="text-xs text-gray-500 mt-1">Standardmäßig auf dein Modell eingestellt.</p>
+            </div>
+            
+            <div class="flex justify-end gap-3">
+                <button onclick="closeSettings()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2.5 rounded-xl text-sm font-semibold">Abbrechen</button>
+                <button onclick="saveSettings()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold">Speichern</button>
+            </div>
+        </div>
+    </div>
 
-                    box.appendChild(img);
-                    box.appendChild(caption);
-                    photoContainer.appendChild(box);
-                }
-                reader.readAsDataURL(file);
+    <script>
+        // Dynamische Felder je nach Branche einblenden
+        function updateDynamicFields() {
+            const category = document.getElementById('contractCategory').value;
+            const container = document.getElementById('dynamicFieldContainer');
+            const label = document.getElementById('dynamicLabel');
+            const input = document.getElementById('extraInfo');
+
+            if (category === 'Strom / Gas') {
+                container.classList.remove('hidden');
+                label.innerText = 'Zählernummer (falls zur Hand)';
+                input.placeholder = 'z.B. 1ZBW12345678';
+            } else if (category === 'Internet / Mobilfunk') {
+                container.classList.remove('hidden');
+                label.innerText = 'Telefonnummer / Anschluss-ID';
+                input.placeholder = 'z.B. 040 / 1234567';
+            } else if (category === 'Versicherung') {
+                container.classList.remove('hidden');
+                label.innerText = 'Versicherungsscheinnummer';
+                input.placeholder = 'z.B. VS-987654321';
+            } else {
+                container.classList.add('hidden');
+                input.value = '';
             }
-        } else {
-            photoContainer.innerHTML = '<p style="font-size: 13px; color: #775;">Keine Bilder ausgewählt.</p>';
         }
 
-        // 4. Bereich sichtbar machen und Druckdialog aufrufen
-        document.getElementById('reportOutput').style.display = 'block';
-        
-        // Kurzer Timeout, damit Bilder laden können, bevor der Druckdialog startet
-        setTimeout(() => {
-            window.print();
-        }, 300);
-    }
-</script>
+        // Modal öffnen / schließen
+        function openSettings() {
+            document.getElementById('apiKeyInput').value = localStorage.getItem('user_ai_api_key') || '';
+            document.getElementById('modelInput').value = localStorage.getItem('user_ai_model') || 'gpt-oss-120b';
+            document.getElementById('settingsModal').classList.remove('hidden');
+        }
 
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        function saveSettings() {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            const model = document.getElementById('modelInput').value.trim();
+            if (key) {
+                localStorage.setItem('user_ai_api_key', key);
+                localStorage.setItem('user_ai_model', model || 'gpt-oss-120b');
+                alert('Einstellungen erfolgreich im Browser gespeichert!');
+                closeSettings();
+            } else {
+                alert('Bitte gib einen gültigen API-Key ein.');
+            }
+        }
+
+        // Beim ersten Laden prüfen, ob Settings leer sind -> Modal öffnen
+        window.addEventListener('DOMContentLoaded', () => {
+            if (!localStorage.getItem('user_ai_api_key')) {
+                openSettings();
+            }
+        });
+
+        // Kündigung generieren per API-Call
+        document.getElementById('kuendigungForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const apiKey = localStorage.getItem('user_ai_api_key');
+            const modelName = localStorage.getItem('user_ai_model') || 'gpt-oss-120b';
+
+            if (!apiKey) {
+                alert('Bitte hinterlege zuerst deinen API-Key in den Einstellungen (⚙️)!');
+                openSettings();
+                return;
+            }
+
+            // Formulardaten einsammeln
+            const category = document.getElementById('contractCategory').value;
+            const companyName = document.getElementById('companyName').value;
+            const contractNumber = document.getElementById('contractNumber').value;
+            const extraInfo = document.getElementById('extraInfo').value;
+            const senderName = document.getElementById('senderName').value;
+            const senderStreet = document.getElementById('senderStreet').value;
+            const senderCity = document.getElementById('senderCity').value;
+            const senderEmail = document.getElementById('senderEmail').value;
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerText = "KI schreibt Kündigung...";
+
+            const resultContainer = document.getElementById('resultContainer');
+            const outputLetter = document.getElementById('outputLetter');
+            resultContainer.classList.remove('hidden');
+            outputLetter.value = "Formuliere rechtssicheren Geschäftsbrief...";
+
+            // Der professionelle System-Prompt für saubere, fehlerfreie Kündigungen
+            const systemPrompt = `Du bist ein hochpräziser juristischer Assistent für deutsches Vertragsrecht. Erstelle absolut professionelle, formgerechte und rechtssichere deutsche Kündigungen im Geschäftsbrief-Stil (nach DIN 5008). 
+            - Verwende immer die Formulierung "fristgerecht zum nächstmöglichen Termin".
+            - Fordere unmissverständlich eine schriftliche Kündigungsbestätigung unter Angabe des genauen Beendigungsdatums ein.
+            - Füge den Satz hinzu, dass das SEPA-Lastschriftmandat zum Wirksamkeitsdatum widerrufen wird.
+            - Keine flapsigen Formulierungen, sauber strukturiert mit Absender, Empfänger, Betreff, Datum und Unterschriftenfeld.`;
+
+            const userPrompt = `Erstelle eine professionelle Kündigung für folgende Daten:
+            - Vertragsart: ${category}
+            - Unternehmen: ${companyName}
+            - Vertrags-/Mitgliedsnummer: ${contractNumber}
+            - Zusätzliche Info: ${extraInfo || 'Keine'}
+            - Absender: 
+              ${senderName}
+              ${senderStreet}
+              ${senderCity}
+              E-Mail: ${senderEmail || 'Nicht angegeben'}`;
+
+            try {
+                // OpenAI-kompatibler Endpunkt (kann je nach Plattform angepasst werden, Standard ist OpenAI)
+                const apiEndpoint = 'https://api.openai.com/v1/chat/completions';
+
+                const response = await fetch(apiEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: modelName,
+                        messages: [
+                            { role: "system", content: systemPrompt },
+                            { role: "user", content: userPrompt }
+                        ],
+                        temperature: 0.2
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error.message);
+                }
+
+                outputLetter.value = data.choices[0].message.content;
+                resultContainer.scrollIntoView({ behavior: 'smooth' });
+
+            } catch (error) {
+                alert('Fehler bei der API-Anfrage: ' + error.message);
+                outputLetter.value = "Fehler: " + error.message;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Kündigung professionell generieren 🚀";
+            }
+        });
+
+        function copyToClipboard() {
+            const textarea = document.getElementById('outputLetter');
+            textarea.select();
+            document.execCommand('copy');
+            alert('Kündigung in die Zwischenablage kopiert!');
+        }
+    </script>
 </body>
 </html>
