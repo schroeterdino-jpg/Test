@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automatisierter Gefährdungs- & Near-Miss-Report</title>
+    <style>
+        /* --- Screen Styling --- */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        h1 { font-size: 22px; color: #003366; border-bottom: 2px solid #003366; padding-bottom: 8px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+        input[type="text"], select, textarea {
+            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
+        }
+        textarea { resize: vertical; height: 100px; }
+        button {
+            background-color: #003366; color: white; border: none; padding: 12px 20px;
+            font-size: 16px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 10px;
+        }
+        button:hover { background-color: #002244; }
+
+        /* --- Report Print / A4 Layout Styling --- */
+        .report-preview {
+            margin-top: 40px; border: 2px solid #003366; padding: 25px; background: #fff; display: none;
+        }
+        .report-header { display: flex; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 15px; }
+        .report-header div { font-size: 14px; }
+        .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .box { border: 1px solid #ccc; padding: 10px; border-radius: 4px; background: #fafafa; }
+        .photo-section { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .photo-box { border: 1px solid #ccc; padding: 8px; text-align: center; background: #fff; }
+        .photo-box img { max-width: 100%; height: 140px; object-fit: cover; border-radius: 3px; }
+        .photo-caption { font-size: 12px; margin-top: 5px; color: #555; }
+
+        /* --- Print Specifics (DIN A4 Clean Export) --- */
+        @media print {
+            body { background: none; padding: 0; }
+            .container > *:not(#reportOutput) { display: none; } /* Versteckt das Eingabeformular beim Drucken */
+            .report-preview { display: block !important; border: none; margin: 0; padding: 0; width: 100%; box-shadow: none; }
+            button { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Smart Report Generator</h1>
+    
+    <!-- Eingabeformular -->
+    <div class="form-group">
+        <label for="reportType">Berichtsart:</label>
+        <select id="reportType">
+            <option value="Near Miss Report (Beinaheunfall)">Near Miss Report (Beinaheunfall)</option>
+            <option value="Gefährdungsbericht / Mängelmeldung">Gefährdungsbericht / Mängelmeldung</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="department">Bereich / Kostenstelle:</label>
+        <input type="text" id="department" value="Kleinteillager (KTL)" placeholder="z.B. KTL Gang 3">
+    </div>
+
+    <div class="form-group">
+        <label for="reporter">Melder:</label>
+        <input type="text" id="reporter" value="Dino Schröter">
+    </div>
+
+    <div class="form-group">
+        <label for="rawNotes">Stichpunkte zum Vorfall (Die App sortiert & formuliert daraus den Text):</label>
+        <textarea id="rawNotes" placeholder="Eingangsbereich Regal 4: Schwere Europalette steht 15cm über Kante. Gefahr des Herabfallens. Sofortige Umstapelung und Absicherung veranlasst.">Übersicht: Eingangsbereich Regal 4, Palette steht 15cm über Kante.
+Detail: Nahaufnahme der losen Umreifung und der schiefen Position.
+Maßnahme: Sofortige Korrektur und Einweisung der Schicht.</textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="imageUpload">Fotos auswählen (Mehrfachauswahl):</label>
+        <input type="file" id="imageUpload" accept="image/*" multiple>
+    </div>
+
+    <button onclick="generateReport()">Report generieren & Drucken</button>
+
+    <!-- Fertiger Report (Wird nach Klick sichtbar & formatiert) -->
+    <div id="reportOutput" class="report-preview">
+        <div class="report-header">
+            <div><strong>Betriebs-Sicherheitsreport</strong><br><span id="outType">Near Miss Report</span></div>
+            <div>Datum: <span id="outDate"></span><br>Bereich: <span id="outDept"></span></div>
+        </div>
+
+        <div class="report-grid">
+            <div class="box">
+                <label>Melder / Verantwortlich:</label>
+                <span id="outReporter">Dino Schröter</span>
+            </div>
+            <div class="box">
+                <label>Status:</label>
+                <span style="color: green; font-weight: bold;">Erfasst & Ausgearbeitet</span>
+            </div>
+        </div>
+
+        <div class="box" style="margin-bottom: 15px;">
+            <label><strong>Automatisierter Untersuchungs- und Maßnahmenbericht:</strong></label>
+            <p id="outText" style="white-space: pre-line; font-size: 14px; line-height: 1.4;"></p>
+        </div>
+
+        <label><strong>Visuelle Dokumentation (Automatisch zugeordnet):</strong></label>
+        <div class="photo-section" id="outPhotos">
+            <!-- Dynamische Bilder landen hier -->
+        </div>
+    </div>
+</div>
+
+<script>
+    function generateReport() {
+        // 1. Kopfdaten füllen
+        const type = document.getElementById('reportType').value;
+        const dept = document.getElementById('department').value;
+        const reporter = document.getElementById('reporter').value;
+        const notes = document.getElementById('rawNotes').value;
+
+        document.getElementById('outType').innerText = type;
+        document.getElementById('outDept').innerText = dept;
+        document.getElementById('outReporter').innerText = reporter;
+        
+        // Aktuelles Datum setzen
+        const today = new Date().toLocaleDateString('de-DE');
+        document.getElementById('outDate').innerText = today;
+
+        // 2. Stichpunkte in Fließtext verwandeln (Mini-Intelligenz)
+        // Hier greift später die echte KI-Logik ein, für den Prototypen formen wir es sauber auf:
+        let formattedText = "Basierend auf den erfassten Stichpunkten ergibt sich folgender Vorfall:\n\n" + notes;
+        document.getElementById('outText').innerText = formattedText;
+
+        // 3. Bilder verarbeiten & automatisch zuordnen
+        const fileInput = document.getElementById('imageUpload');
+        const photoContainer = document.getElementById('outPhotos');
+        photoContainer.innerHTML = ''; // Vorherige Bilder löschen
+
+        if (fileInput.files && fileInput.files.length > 0) {
+            // Stichpunkte in Zeilen aufteilen, um Kategorien zu matchen
+            const noteLines = notes.split('\n');
+
+            for (let i = 0; i < fileInput.files.length; i++) {
+                const file = fileInput.files[i];
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const box = document.createElement('div');
+                    box.className = 'photo-box';
+
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+
+                    const caption = document.createElement('div');
+                    caption.className = 'photo-caption';
+                    
+                    // Automatische Zuordnung: Versuche Bild 1 als Übersicht, Bild 2 als Detail zuzuordnen
+                    let assignedLabel = `Dokumentation Bild ${i + 1}`;
+                    if (i === 0 && noteLines[0]) {
+                        assignedLabel = "Übersicht: " + noteLines[0].substring(0, 40) + "...";
+                    } else if (i === 1 && noteLines[1]) {
+                        assignedLabel = "Detail: " + noteLines[1].substring(0, 40) + "...";
+                    } else if (noteLines[i]) {
+                        assignedLabel = noteLines[i].substring(0, 40) + "...";
+                    }
+                    
+                    caption.innerText = assignedLabel;
+
+                    box.appendChild(img);
+                    box.appendChild(caption);
+                    photoContainer.appendChild(box);
+                }
+                reader.readAsDataURL(file);
+            }
+        } else {
+            photoContainer.innerHTML = '<p style="font-size: 13px; color: #775;">Keine Bilder ausgewählt.</p>';
+        }
+
+        // 4. Bereich sichtbar machen und Druckdialog aufrufen
+        document.getElementById('reportOutput').style.display = 'block';
+        
+        // Kurzer Timeout, damit Bilder laden können, bevor der Druckdialog startet
+        setTimeout(() => {
+            window.print();
+        }, 300);
+    }
+</script>
+
+</body>
+</html>
