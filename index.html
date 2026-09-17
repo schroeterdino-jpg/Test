@@ -30,14 +30,14 @@
         <div class="flex justify-between items-center mb-8 border-b pb-4 no-print">
             <div>
                 <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">📄 Kündigungs-Profi</h1>
-                <p class="text-xs text-slate-500 mt-1">Rechtssicher, direkt ausfüllbar & mit PDF-Export</p>
+                <p class="text-xs text-slate-500 mt-1">Rechtssicher, flüssig formuliert & perfekter PDF-Export</p>
             </div>
             <button onclick="openSettings()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-2xl text-sm font-semibold transition flex items-center gap-2">
                 ⚙️ Einstellungen
             </button>
         </div>
         
-        <div id="kuendigungForm" class="space-y-8 no-print">
+        <div class="space-y-8 no-print">
             
             <!-- SCHRITT 1: Direkte Empfänger-Eingabe -->
             <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-100 space-y-4">
@@ -150,18 +150,18 @@
                 </div>
             </div>
 
-            <!-- Generierungs-Button (kein type="submit" mehr, sondern reiner Button mit Event-Listener) -->
+            <!-- Generierungs-Button -->
             <button type="button" id="submitBtn" onclick="generateLetter()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold p-4 rounded-2xl transition duration-200 shadow-lg text-base cursor-pointer">
                 Rechtssichere Kündigung generieren 🚀
             </button>
         </div>
 
-        <!-- Ausgabe-Bereich -->
+        <!-- Ausgabe-Bereich mit sauberem HTML für den PDF-Export -->
         <div id="resultContainer" class="mt-8 hidden border-t pt-8">
             <h2 class="text-lg font-bold mb-3 text-slate-800 no-print">Dein fertiges Kündigungsschreiben:</h2>
             
-            <div id="printArea" class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-                <textarea id="outputLetter" rows="18" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm leading-relaxed outline-none resize-y"></textarea>
+            <div id="printArea" class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm font-serif text-sm leading-relaxed text-black min-h-[400px] whitespace-pre-line">
+                <!-- Hier landet der sauber formatierte Text -->
             </div>
 
             <div class="flex flex-wrap gap-3 mt-6 no-print">
@@ -202,7 +202,6 @@
     </div>
 
     <script>
-        // Felder bei Eingabe automatisch im localStorage sichern, damit nichts verloren geht
         const formFields = ['companyName', 'companyStreet', 'companyCity', 'contractNumber', 'senderName', 'senderStreet', 'senderCity', 'senderEmail', 'extraInfo', 'terminationReason'];
         
         formFields.forEach(id => {
@@ -319,27 +318,31 @@
 
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
-            submitBtn.innerText = "Erstelle vollständiges Schreiben...";
+            submitBtn.innerText = "Formuliere professionelles Schreiben...";
 
             const resultContainer = document.getElementById('resultContainer');
-            const outputLetter = document.getElementById('outputLetter');
+            const printArea = document.getElementById('printArea');
             resultContainer.classList.remove('hidden');
-            outputLetter.value = "Generiere vollständiges Dokument über KI...";
+            printArea.innerText = "Generiere formgerechtes Dokument...";
 
-            const systemPrompt = `Du bist ein deutscher Experte für deutsches Vertragsrecht und DIN 5008 Geschäftsbriefe. 
-            Deine Aufgabe ist es, einen VOLLSTÄNDIGEN, formellen und rechtssicheren Kündigungsbrief zu schreiben. 
-            Der Brief MUSS absolut komplett sein: Vom DIN 5008 Briefkopf (Absender oben links, Empfänger darunter, Datum rechts) über den aussagekräftigen Betreff, die Anrede, den vollständigen Hauptteil inklusive Kündigungswortlaut, den SEPA-Widerruf, die Aufforderung zur schriftlichen Bestätigung mit genauem Datum, die Grußformel bis hin zum handschriftlichen Unterschriftenfeld.
-            Verwende KEINE Markdown-Sternchen (** oder *). Antworte ausschließlich mit dem reinen Text des fertigen Briefes.`;
+            // Strenger geschäftsmäßiger Stil mit flüssigen, natürlichen Sätzen
+            const systemPrompt = `Du bist ein hochpräziser juristischer Experte für formgerechte deutsche Geschäftsbriefe nach DIN 5008. 
+            Verfasse einen absolut professionellen, sprachlich einwandfreien und flüssig formulierten Kündigungsbrief.
+            - Achte peinlich genau auf saubere Grammatik und natürliche Satzübergänge (keine abgehackten Wortfetzen oder seltsamen Zeilenumbrüche).
+            - Briefkopf: Absender oben links, darunter Empfänger, rechts das aktuelle Datum.
+            - Klarer Betreff mit Vertragsnummer.
+            - Professioneller Hauptteil mit klarer Kündigungserklärung, dem gewünschten Termin, dem SEPA-Lastschriftmandat-Widerruf und der Aufforderung zur schriftlichen Bestätigung.
+            - Verwende KEINE Markdown-Sternchen (** oder *). Gib nur den reinen Text des Briefes aus.`;
 
-            const userPrompt = `Schreibe den kompletten Kündigungsbrief für folgende Daten:
-            - Kündigungsart: ${data.type}
-            - Branche/Kategorie: ${data.category}
+            const userPrompt = `Erstelle einen vollkommen flüssig formulierten, professionellen Kündigungsbrief für:
+            - Art: ${data.type}
+            - Kategorie: ${data.category}
             - Empfänger: ${data.companyName}, ${data.companyStreet}, ${data.companyCity}
-            - Vertrags-/Mitgliedsnummer: ${data.contractNumber}
+            - Vertragsnummer: ${data.contractNumber}
             - Zusatzinfo: ${data.extraInfo || 'Keine'}
             - Grund: ${data.reason || 'Keiner'}
-            - SEPA-Lastschriftmandat widerrufen: ${data.revokeSepa ? 'Ja' : 'Nein'}
-            - Schriftliche Bestätigung fordern: ${data.requestConfirmation ? 'Ja' : 'Nein'}
+            - SEPA-Widerruf: ${data.revokeSepa ? 'Ja' : 'Nein'}
+            - Bestätigung fordern: ${data.requestConfirmation ? 'Ja' : 'Nein'}
             - Absender: ${data.senderName}, ${data.senderStreet}, ${data.senderCity}, E-Mail: ${data.senderEmail}`;
 
             try {
@@ -363,11 +366,11 @@
                 let raw = resJson.choices[0].message.content;
                 let clean = raw.replace(/\*\*/g, '').replace(/\*/g, '').replace(/&nbsp;/g, ' ');
 
-                outputLetter.value = clean;
+                printArea.innerText = clean;
                 resultContainer.scrollIntoView({ behavior: 'smooth' });
             } catch (err) {
                 alert('Fehler bei der API-Anfrage: ' + err.message);
-                outputLetter.value = "Fehler bei der Generierung: " + err.message;
+                printArea.innerText = "Fehler bei der Generierung: " + err.message;
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerText = "Rechtssichere Kündigung generieren 🚀";
@@ -375,10 +378,10 @@
         }
 
         function copyToClipboard() {
-            const ta = document.getElementById('outputLetter');
-            ta.select();
-            document.execCommand('copy');
-            alert('In Zwischenablage kopiert!');
+            const text = document.getElementById('printArea').innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Schreiben in die Zwischenablage kopiert!');
+            });
         }
 
         function downloadPDF() {
