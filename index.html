@@ -29,7 +29,7 @@
         <div class="flex justify-between items-center mb-8 border-b pb-4 no-print">
             <div>
                 <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">📄 Kündigungs-Profi</h1>
-                <p class="text-xs text-slate-500 mt-1">Rechtssicher, schnell & universell einsetzbar</p>
+                <p class="text-xs text-slate-500 mt-1">Rechtssicher, schnell & direkt ausfüllbar</p>
             </div>
             <button onclick="openSettings()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-2xl text-sm font-semibold transition flex items-center gap-2">
                 ⚙️ Einstellungen
@@ -38,37 +38,27 @@
         
         <form id="kuendigungForm" class="space-y-8 no-print">
             
-            <!-- SCHRITT 1: Empfänger & Live-Suche -->
+            <!-- SCHRITT 1: Direkte Empfänger-Eingabe -->
             <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-100 space-y-4">
                 <h2 class="text-base font-bold text-blue-900 flex items-center gap-2">
-                    <span>1.</span> Vertragspartner & Adresse suchen
+                    <span>1.</span> Empfänger (Vertragspartner)
                 </h2>
-                
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Globale Schnellsuche (KI-gestützt + Lokaler Fix)</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="companySearchInput" placeholder="z.B. Elbfitness Schwarzenbek, BKK Pfalz, E.ON..." class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                        <button type="button" id="searchBtn" onclick="searchCompanyAddress()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl text-sm font-semibold transition shrink-0 shadow-sm">
-                            Adresse finden 🔍
-                        </button>
-                    </div>
-                </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Name des Unternehmens</label>
-                        <input type="text" id="companyName" required placeholder="z.B. BKK Pfalz" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
+                        <input type="text" id="companyName" required placeholder="z.B. Elbfitness Schwarzenbek" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Straße & Hausnummer</label>
-                        <input type="text" id="companyStreet" required placeholder="z.B. Am Schloßberg 1" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
+                        <input type="text" id="companyStreet" required placeholder="z.B. Hamburger Str. 5-7" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">PLZ & Ort</label>
-                        <input type="text" id="companyCity" required placeholder="z.B. 67346 Speyer" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
+                        <input type="text" id="companyCity" required placeholder="z.B. 21493 Schwarzenbek" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Vertrags- / Mitgliedsnummer</label>
@@ -95,8 +85,8 @@
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Branche / Vertragskategorie</label>
                         <select id="contractCategory" onchange="updateDynamicFields()" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                            <option value="Krankenkasse">🏥 Krankenkasse</option>
                             <option value="Fitnessstudio">🏋️ Fitnessstudio</option>
+                            <option value="Krankenkasse">🏥 Krankenkasse</option>
                             <option value="Strom / Gas">⚡ Strom & Gas</option>
                             <option value="Internet / Mobilfunk">📱 Internet & Mobilfunk</option>
                             <option value="Streaming / Abo">🎬 Streaming & Abo</option>
@@ -260,76 +250,13 @@
                 container.classList.remove('hidden');
                 label.innerText = 'Versicherungsscheinnummer';
                 input.placeholder = 'z.B. VS-987654';
+            } else if (category === 'Krankenkasse') {
+                container.classList.remove('hidden');
+                label.innerText = 'Krankenkassen-Mitgliedsnummer';
+                input.placeholder = 'z.B. A123456789';
             } else {
                 container.classList.add('hidden');
                 input.value = '';
-            }
-        }
-
-        async function searchCompanyAddress() {
-            const queryInput = document.getElementById('companySearchInput').value.trim();
-            const query = queryInput.toLowerCase();
-            
-            if (query.includes('elbfitness') || query.includes('easy fitness') || query.includes('easyfitness')) {
-                document.getElementById('companyName').value = 'Elbfitness Schwarzenbek';
-                document.getElementById('companyStreet').value = 'Hamburger Str. 5-7';
-                document.getElementById('companyCity').value = '21493 Schwarzenbek';
-                alert('Adresse für Elbfitness Schwarzenbek erfolgreich geladen!');
-                return;
-            } else if (query.includes('bkk pfalz') || query.includes('bkk')) {
-                document.getElementById('companyName').value = 'BKK Pfalz';
-                document.getElementById('companyStreet').value = 'Am Schloßberg 1';
-                document.getElementById('companyCity').value = '67346 Speyer';
-                alert('Adresse für BKK Pfalz erfolgreich geladen!');
-                return;
-            }
-
-            const apiKey = localStorage.getItem('user_ai_api_key');
-            const apiEndpoint = localStorage.getItem('user_ai_endpoint') || 'https://api.groq.com/openai/v1/chat/completions';
-
-            if (!queryInput) {
-                alert('Bitte gib einen Suchbegriff ein.');
-                return;
-            }
-            if (!apiKey) {
-                alert('Bitte hinterlege zuerst deinen API-Key in den Einstellungen!');
-                openSettings();
-                return;
-            }
-
-            const btn = document.getElementById('searchBtn');
-            const originalText = btn.innerText;
-            btn.disabled = true;
-            btn.innerText = "Suche...";
-
-            try {
-                const response = await fetch(apiEndpoint, {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: 'openai/gpt-oss-120b',
-                        messages: [
-                            { role: "system", content: "Gib als Antwort NUR einen validen JSON-String zurück ohne Erklärungen: {\"name\": \"Firmenname\", \"street\": \"Strasse Hausnummer\", \"city\": \"PLZ Ort\"}" },
-                            { role: "user", content: `Finde die offizielle Adresse für: ${queryInput}` }
-                        ],
-                        temperature: 0.1
-                    })
-                });
-
-                const data = await response.json();
-                let textRes = data.choices[0].message.content.trim();
-                textRes = textRes.replace(/```json/g, '').replace(/```/g, '').trim();
-                const res = JSON.parse(textRes);
-
-                document.getElementById('companyName').value = res.name || queryInput;
-                document.getElementById('companyStreet').value = res.street || '';
-                document.getElementById('companyCity').value = res.city || '';
-                alert('Adresse erfolgreich ermittelt!');
-            } catch (err) {
-                alert('Automatische Suche fehlgeschlagen. Bitte trage die Adresse manuell ein.');
-            } finally {
-                btn.disabled = false;
-                btn.innerText = originalText;
             }
         }
 
