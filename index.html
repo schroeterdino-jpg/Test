@@ -47,7 +47,7 @@
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Globale Schnellsuche (KI-gestützt + Lokaler Fix)</label>
                     <div class="flex gap-2">
-                        <input type="text" id="companySearchInput" placeholder="z.B. Elbfitness Schwarzenbek, E.ON, Netflix..." class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <input type="text" id="companySearchInput" placeholder="z.B. Elbfitness Schwarzenbek, BKK Pfalz, E.ON..." class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                         <button type="button" onclick="searchCompanyAddress()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl text-sm font-semibold transition shrink-0 shadow-sm">
                             Adresse finden 🔍
                         </button>
@@ -57,18 +57,18 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Name des Unternehmens</label>
-                        <input type="text" id="companyName" required placeholder="z.B. Elbfitness" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
+                        <input type="text" id="companyName" required placeholder="z.B. BKK Pfalz" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Straße & Hausnummer</label>
-                        <input type="text" id="companyStreet" required placeholder="z.B. Hamburger Str. 5-7" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
+                        <input type="text" id="companyStreet" required placeholder="z.B. Am Schloßberg 1" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">PLZ & Ort</label>
-                        <input type="text" id="companyCity" required placeholder="z.B. 21493 Schwarzenbek" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
+                        <input type="text" id="companyCity" required placeholder="z.B. 67346 Speyer" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Vertrags- / Mitgliedsnummer</label>
@@ -95,6 +95,7 @@
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Branche / Vertragskategorie</label>
                         <select id="contractCategory" onchange="updateDynamicFields()" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="Krankenkasse">🏥 Krankenkasse</option>
                             <option value="Fitnessstudio">🏋️ Fitnessstudio</option>
                             <option value="Strom / Gas">⚡ Strom & Gas</option>
                             <option value="Internet / Mobilfunk">📱 Internet & Mobilfunk</option>
@@ -170,7 +171,7 @@
             <h2 class="text-lg font-bold mb-3 text-slate-800 no-print">Dein fertiges Kündigungsschreiben:</h2>
             
             <div id="printArea" class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
-                <textarea id="outputLetter" rows="16" class="w-full p-4 bg-white border border-slate-200 rounded-xl font-mono text-sm leading-relaxed outline-none resize-y shadow-inner"></textarea>
+                <textarea id="outputLetter" rows="18" class="w-full p-4 bg-white border border-slate-200 rounded-xl font-mono text-sm leading-relaxed outline-none resize-y shadow-inner"></textarea>
             </div>
 
             <div class="flex flex-wrap gap-3 mt-6 no-print">
@@ -211,7 +212,6 @@
     </div>
 
     <script>
-        // Laden gespeicherter Absenderdaten beim Start
         window.addEventListener('DOMContentLoaded', () => {
             if (localStorage.getItem('sender_name')) document.getElementById('senderName').value = localStorage.getItem('sender_name');
             if (localStorage.getItem('sender_street')) document.getElementById('senderStreet').value = localStorage.getItem('sender_street');
@@ -270,12 +270,17 @@
             const queryInput = document.getElementById('companySearchInput').value.trim();
             const query = queryInput.toLowerCase();
             
-            // Fester Fix für Elbfitness in Schwarzenbek, damit keine KI-Fehler passieren
             if (query.includes('elbfitness') || query.includes('easy fitness') || query.includes('easyfitness')) {
                 document.getElementById('companyName').value = 'Elbfitness Schwarzenbek';
                 document.getElementById('companyStreet').value = 'Hamburger Str. 5-7';
                 document.getElementById('companyCity').value = '21493 Schwarzenbek';
                 alert('Adresse für Elbfitness Schwarzenbek erfolgreich geladen!');
+                return;
+            } else if (query.includes('bkk pfalz') || query.includes('bkk')) {
+                document.getElementById('companyName').value = 'BKK Pfalz';
+                document.getElementById('companyStreet').value = 'Am Schloßberg 1';
+                document.getElementById('companyCity').value = '67346 Speyer';
+                alert('Adresse für BKK Pfalz erfolgreich geladen!');
                 return;
             }
 
@@ -300,27 +305,28 @@
             try {
                 const response = await fetch(apiEndpoint, {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+                    headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         model: 'openai/gpt-oss-120b',
                         messages: [
-                            { role: "system", content: "Du bist ein präziser Adressfinder für Deutschland. Antworte AUSSCHLIESSLICH im exakten JSON-Format: {\"name\": \"Firmenname\", \"street\": \"Strasse Hausnummer\", \"city\": \"PLZ Ort\"}." },
-                            { role: "user", content: `Finde die exakte offizielle Postanschrift für: ${queryInput}` }
+                            { role: "system", content: "Gib als Antwort NUR einen validen JSON-String zurück ohne Erklärungen: {\"name\": \"Firmenname\", \"street\": \"Strasse Hausnummer\", \"city\": \"PLZ Ort\"}" },
+                            { role: "user", content: `Finde die offizielle Adresse für: ${queryInput}` }
                         ],
                         temperature: 0.1
                     })
                 });
 
                 const data = await response.json();
-                let raw = data.choices[0].message.content.trim().replace(/```json/g, '').replace(/```/g, '').trim();
-                const res = JSON.parse(raw);
+                let textRes = data.choices[0].message.content.trim();
+                textRes = textRes.replace(/```json/g, '').replace(/```/g, '').trim();
+                const res = JSON.parse(textRes);
 
                 document.getElementById('companyName').value = res.name || queryInput;
                 document.getElementById('companyStreet').value = res.street || '';
                 document.getElementById('companyCity').value = res.city || '';
                 alert('Adresse erfolgreich ermittelt!');
             } catch (err) {
-                alert('Adresse konnte nicht automatisch ermittelt werden. Bitte trage sie manuell ein.');
+                alert('Automatische Suche fehlgeschlagen. Bitte trage die Adresse manuell ein.');
             } finally {
                 btn.disabled = false;
                 btn.innerText = originalText;
@@ -380,41 +386,41 @@
 
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
-            submitBtn.innerText = "Erstelle rechtssicheres Schreiben...";
+            submitBtn.innerText = "Erstelle vollständiges Schreiben...";
 
             const resultContainer = document.getElementById('resultContainer');
             const outputLetter = document.getElementById('outputLetter');
             resultContainer.classList.remove('hidden');
-            outputLetter.value = "Generiere Dokument...";
+            outputLetter.value = "Generiere vollständiges Dokument...";
 
-            const systemPrompt = `Du bist ein deutscher Fachexperte für Vertragsrecht und DIN 5008 Geschäftsbriefe. 
-            - Erstelle ein absolut professionelles, formelles Kündigungsschreiben.
-            - Keine Markdown-Sternchen (** oder *).
-            - Korrekte DIN 5008 Briefkopf-Anordnung (Absenderzeile klein über Empfänger, Datum rechts).
-            - Integriere exakt die gewünschten Bedingungen (SEPA-Widerruf, Bestätigungsaufforderung etc.).`;
+            const systemPrompt = `Du bist ein deutscher Experte für deutsches Vertragsrecht und DIN 5008 Geschäftsbriefe. 
+            Deine Aufgabe ist es, einen VOLLSTÄNDIGEN, formellen und rechtssicheren Kündigungsbrief zu schreiben. 
+            Der Brief MUSS absolut komplett sein: Vom DIN 5008 Briefkopf (Absender oben links, Empfänger darunter, Datum rechts) über den aussagekräftigen Betreff, die Anrede, den vollständigen Hauptteil inklusive Kündigungswortlaut, den SEPA-Widerruf, die Aufforderung zur schriftlichen Bestätigung mit genauem Datum, die Grußformel bis hin zum handschriftlichen Unterschriftenfeld.
+            Verwende KEINE Markdown-Sternchen (** oder *). Antworte ausschließlich mit dem reinen Text des fertigen Briefes.`;
 
-            const userPrompt = `Erstelle eine Kündigung nach folgenden Parametern:
-            - Art: ${data.type}
-            - Kategorie: ${data.category}
+            const userPrompt = `Schreibe den kompletten Kündigungsbrief für folgende Daten:
+            - Kündigungsart: ${data.type}
+            - Branche/Kategorie: ${data.category}
             - Empfänger: ${data.companyName}, ${data.companyStreet}, ${data.companyCity}
-            - Vertragsnummer: ${data.contractNumber}
+            - Vertrags-/Mitgliedsnummer: ${data.contractNumber}
             - Zusatzinfo: ${data.extraInfo || 'Keine'}
             - Grund: ${data.reason || 'Keiner'}
-            - SEPA-Widerruf erwünscht: ${data.revokeSepa}
-            - Bestätigung erwünscht: ${data.requestConfirmation}
+            - SEPA-Lastschriftmandat widerrufen: ${data.revokeSepa ? 'Ja' : 'Nein'}
+            - Schriftliche Bestätigung fordern: ${data.requestConfirmation ? 'Ja' : 'Nein'}
             - Absender: ${data.senderName}, ${data.senderStreet}, ${data.senderCity}, E-Mail: ${data.senderEmail}`;
 
             try {
                 const response = await fetch(apiEndpoint, {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+                    headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         model: 'openai/gpt-oss-120b',
                         messages: [
                             { role: "system", content: systemPrompt },
                             { role: "user", content: userPrompt }
                         ],
-                        temperature: 0.2
+                        temperature: 0.2,
+                        max_tokens: 2000
                     })
                 });
 
@@ -447,7 +453,7 @@
         }
 
         function downloadAsTxt() {
-            const text = document.getElementById('outputLetter').value;
+            const text = document.getElementById('outputLetter'].value;
             const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
