@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profi Kündigungs-Assistent</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- html2pdf Bibliothek für echten PDF-Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         @media print {
@@ -38,7 +37,7 @@
             </button>
         </div>
         
-        <form id="kuendigungForm" class="space-y-8 no-print">
+        <div id="kuendigungForm" class="space-y-8 no-print">
             
             <!-- SCHRITT 1: Direkte Empfänger-Eingabe -->
             <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-100 space-y-4">
@@ -49,22 +48,22 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Name des Unternehmens</label>
-                        <input type="text" id="companyName" required placeholder="z.B. Elbfitness Schwarzenbek" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
+                        <input type="text" id="companyName" placeholder="z.B. Elbfitness Schwarzenbek" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Straße & Hausnummer</label>
-                        <input type="text" id="companyStreet" required placeholder="z.B. Hamburger Str. 5-7" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
+                        <input type="text" id="companyStreet" placeholder="z.B. Hamburger Str. 5-7" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">PLZ & Ort</label>
-                        <input type="text" id="companyCity" required placeholder="z.B. 21493 Schwarzenbek" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
+                        <input type="text" id="companyCity" placeholder="z.B. 21493 Schwarzenbek" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Vertrags- / Mitgliedsnummer</label>
-                        <input type="text" id="contractNumber" required placeholder="z.B. V-123456789" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
+                        <input type="text" id="contractNumber" placeholder="z.B. V-123456789" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
                     </div>
                 </div>
             </div>
@@ -127,23 +126,22 @@
                     <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
                         <span>3.</span> Deine Absenderdaten
                     </h2>
-                    <button type="button" onclick="saveSenderData()" class="text-xs text-blue-600 hover:text-blue-800 font-semibold">💾 Daten im Browser speichern</button>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Vollständiger Name</label>
-                        <input type="text" id="senderName" required value="Dino Schröter" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
+                        <input type="text" id="senderName" value="Dino Schröter" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Straße & Hausnummer</label>
-                        <input type="text" id="senderStreet" required placeholder="Musterstraße 1" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
+                        <input type="text" id="senderStreet" placeholder="Musterstraße 1" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">PLZ & Ort</label>
-                        <input type="text" id="senderCity" required value="21493 Schwarzenbek" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
+                        <input type="text" id="senderCity" value="21493 Schwarzenbek" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">E-Mail-Adresse</label>
@@ -152,17 +150,16 @@
                 </div>
             </div>
 
-            <!-- Generierungs-Button -->
-            <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold p-4 rounded-2xl transition duration-200 shadow-lg text-base">
+            <!-- Generierungs-Button (kein type="submit" mehr, sondern reiner Button mit Event-Listener) -->
+            <button type="button" id="submitBtn" onclick="generateLetter()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold p-4 rounded-2xl transition duration-200 shadow-lg text-base cursor-pointer">
                 Rechtssichere Kündigung generieren 🚀
             </button>
-        </form>
+        </div>
 
         <!-- Ausgabe-Bereich -->
         <div id="resultContainer" class="mt-8 hidden border-t pt-8">
             <h2 class="text-lg font-bold mb-3 text-slate-800 no-print">Dein fertiges Kündigungsschreiben:</h2>
             
-            <!-- Druck- und PDF-Bereich -->
             <div id="printArea" class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
                 <textarea id="outputLetter" rows="18" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm leading-relaxed outline-none resize-y"></textarea>
             </div>
@@ -205,25 +202,25 @@
     </div>
 
     <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('sender_name')) document.getElementById('senderName').value = localStorage.getItem('sender_name');
-            if (localStorage.getItem('sender_street')) document.getElementById('senderStreet').value = localStorage.getItem('sender_street');
-            if (localStorage.getItem('sender_city')) document.getElementById('senderCity').value = localStorage.getItem('sender_city');
-            if (localStorage.getItem('sender_email')) document.getElementById('senderEmail').value = localStorage.getItem('sender_email');
+        // Felder bei Eingabe automatisch im localStorage sichern, damit nichts verloren geht
+        const formFields = ['companyName', 'companyStreet', 'companyCity', 'contractNumber', 'senderName', 'senderStreet', 'senderCity', 'senderEmail', 'extraInfo', 'terminationReason'];
+        
+        formFields.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                if (localStorage.getItem(id)) el.value = localStorage.getItem(id);
+                el.addEventListener('input', () => {
+                    localStorage.setItem(id, el.value);
+                });
+            }
+        });
 
+        window.addEventListener('DOMContentLoaded', () => {
             if (!localStorage.getItem('user_ai_api_key')) {
                 openSettings();
             }
             updateDynamicFields();
         });
-
-        function saveSenderData() {
-            localStorage.setItem('sender_name', document.getElementById('senderName').value);
-            localStorage.setItem('sender_street', document.getElementById('senderStreet').value);
-            localStorage.setItem('sender_city', document.getElementById('senderCity').value);
-            localStorage.setItem('sender_email', document.getElementById('senderEmail').value);
-            alert('Absenderdaten erfolgreich im Browser gespeichert!');
-        }
 
         function toggleReasonField() {
             const type = document.getElementById('terminationType').value;
@@ -286,23 +283,29 @@
             }
         }
 
-        document.getElementById('kuendigungForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        async function generateLetter() {
             const apiKey = localStorage.getItem('user_ai_api_key');
             const apiEndpoint = localStorage.getItem('user_ai_endpoint') || 'https://api.groq.com/openai/v1/chat/completions';
 
             if (!apiKey) {
-                alert('Bitte API-Key in den Einstellungen hinterlegen!');
+                alert('Bitte hinterlege zuerst deinen API-Key in den Einstellungen (⚙️)!');
                 openSettings();
+                return;
+            }
+
+            const companyName = document.getElementById('companyName').value.trim();
+            if (!companyName) {
+                alert('Bitte gib mindestens den Namen des Unternehmens ein.');
+                document.getElementById('companyName').focus();
                 return;
             }
 
             const data = {
                 category: document.getElementById('contractCategory').value,
                 type: document.getElementById('terminationType').value,
-                companyName: document.getElementById('companyName').value,
+                companyName: companyName,
                 companyStreet: document.getElementById('companyStreet').value,
-                companyCity: document.getElementById('companyCity'].value,
+                companyCity: document.getElementById('companyCity').value,
                 contractNumber: document.getElementById('contractNumber').value,
                 extraInfo: document.getElementById('extraInfo').value,
                 reason: document.getElementById('terminationReason').value,
@@ -321,7 +324,7 @@
             const resultContainer = document.getElementById('resultContainer');
             const outputLetter = document.getElementById('outputLetter');
             resultContainer.classList.remove('hidden');
-            outputLetter.value = "Generiere vollständiges Dokument...";
+            outputLetter.value = "Generiere vollständiges Dokument über KI...";
 
             const systemPrompt = `Du bist ein deutscher Experte für deutsches Vertragsrecht und DIN 5008 Geschäftsbriefe. 
             Deine Aufgabe ist es, einen VOLLSTÄNDIGEN, formellen und rechtssicheren Kündigungsbrief zu schreiben. 
@@ -363,13 +366,13 @@
                 outputLetter.value = clean;
                 resultContainer.scrollIntoView({ behavior: 'smooth' });
             } catch (err) {
-                alert('Fehler: ' + err.message);
-                outputLetter.value = "Fehler bei der Generierung.";
+                alert('Fehler bei der API-Anfrage: ' + err.message);
+                outputLetter.value = "Fehler bei der Generierung: " + err.message;
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerText = "Rechtssichere Kündigung generieren 🚀";
             }
-        });
+        }
 
         function copyToClipboard() {
             const ta = document.getElementById('outputLetter');
@@ -378,7 +381,6 @@
             alert('In Zwischenablage kopiert!');
         }
 
-        // Echtes PDF erzeugen und herunterladen
         function downloadPDF() {
             const element = document.getElementById('printArea');
             const opt = {
